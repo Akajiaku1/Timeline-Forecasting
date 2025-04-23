@@ -1,0 +1,50 @@
+import numpy as np
+import pandas as pd
+import matplotlib.pyplot as plt
+from statsmodels.tsa.arima.model import ARIMA
+from sklearn.metrics import mean_squared_error
+import warnings
+warnings.filterwarnings("ignore")
+
+# Step 1: Generate synthetic time series data
+np.random.seed(42)
+date_range = pd.date_range(start='2018-01-01', end='2023-12-01', freq='MS')  # Monthly Start
+n_periods = len(date_range)
+
+# Create synthetic sales data with trend + seasonality + noise
+trend = np.linspace(100, 500, n_periods)
+seasonality = 50 * np.sin(np.linspace(0, 3 * np.pi, n_periods))
+noise = np.random.normal(0, 20, n_periods)
+
+sales_data = trend + seasonality + noise
+df = pd.DataFrame({'Date': date_range, 'Sales': sales_data})
+df.set_index('Date', inplace=True)
+
+# Step 2: Split into train/test sets
+train = df[:-12]
+test = df[-12:]
+
+# Step 3: Fit ARIMA model
+model = ARIMA(train['Sales'], order=(2,1,2))
+model_fit = model.fit()
+
+# Step 4: Forecast
+forecast = model_fit.forecast(steps=12)
+forecast_index = test.index
+
+# Step 5: Plotting
+plt.figure(figsize=(12,6))
+plt.plot(df.index, df['Sales'], label='Original Series', color='blue')
+plt.plot(test.index, test['Sales'], label='Actual', color='green')
+plt.plot(forecast_index, forecast, label='Forecast', color='red', linestyle='--')
+plt.title('Timeline Forecasting using ARIMA')
+plt.xlabel('Date')
+plt.ylabel('Sales')
+plt.legend()
+plt.grid(True)
+plt.tight_layout()
+plt.show()
+
+# Step 6: Evaluate
+rmse = np.sqrt(mean_squared_error(test['Sales'], forecast))
+print(f"Root Mean Squared Error: {rmse:.2f}")
