@@ -1,0 +1,18 @@
+from prophet import Prophet
+
+# Prepare data
+df_prophet = df.reset_index().rename(columns={"Date": "ds", "Sales": "y"})
+
+# Split data
+train_prophet = df_prophet[:-12]
+
+# Fit model
+model = Prophet()
+model.fit(train_prophet)
+
+# Forecast
+future = model.make_future_dataframe(periods=12, freq='MS')
+forecast = model.predict(future)
+
+# Plot
+fig = model.plot(forecast)
